@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AHMD People — Live AI HR Automation</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 32px 16px;
+      line-height: 1.6;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    h1 { margin: 0; font-size: 1.9rem; }
+    h2 { margin-top: 36px; margin-bottom: 12px; font-size: 1.35rem; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    p.subtitle { color: var(--muted); margin: 4px 0 0; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      background: #e2e8f0;
+    }
+    .badge.on { background: #dcfce7; color: #166534; }
+    .badge.off { background: #fee2e2; color: #991b1b; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .card h3 { margin-top: 0; margin-bottom: 8px; }
+    .card p { color: var(--muted); font-size: 0.95rem; margin-bottom: 16px; }
+    .btn {
+      display: inline-block;
+      background: var(--primary);
+      color: #fff;
+      text-decoration: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .btn:hover { background: var(--primary-hover); }
+    .btn.secondary { background: #334155; }
+    .btn.secondary:hover { background: #1e293b; }
+    a.disabled { pointer-events: none; opacity: 0.45; }
+    #msgs {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      min-height: 200px;
+      max-height: 360px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+    }
+    .me {
+      background: #eff6ff;
+      color: #1e3a8a;
+      padding: 8px 12px;
+      border-radius: 10px;
+      margin: 8px 0 8px auto;
+      max-width: 80%;
+      width: fit-content;
+    }
+    .bot {
+      background: #f1f5f9;
+      padding: 10px 14px;
+      border-radius: 10px;
+      margin: 8px 0;
+      max-width: 85%;
+      white-space: pre-wrap;
+    }
+    #ask { display: flex; gap: 8px; }
+    #q {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    ol.steps { padding-left: 20px; }
+    ol.steps li { margin-bottom: 8px; }
+    ul.downloads { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+    ul.downloads li a {
+      display: inline-block;
+      padding: 8px 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--primary);
+      font-size: 0.9rem;
+    }
+    ul.downloads li a:hover { border-color: var(--primary); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1>AHMD People</h1>
+      <p class="subtitle">End-to-end AI HR Automation: Policy RAG Assistant, CV Coaching & Automated Screening.</p>
+    </div>
+    <span class="badge" id="status">Checking system...</span>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <h3>1. Ask HR Assistant</h3>
+      <p>Get instant answers sourced directly from AHMD company HR policies using RAG.</p>
+      <a href="#chat-section" class="btn secondary">Ask a Question</a>
+    </div>
+    <div class="card">
+      <h3>2. Job Application Coach</h3>
+      <p>Upload your CV and target job post to receive an AI-generated tailored coaching report via email.</p>
+      <a id="coachLink" target="_blank" rel="noopener" class="btn">Get Coached</a>
+    </div>
+    <div class="card">
+      <h3>3. Apply for a Role</h3>
+      <p>Submit your PDF CV to enter our automated AI screening pipeline.</p>
+      <a id="applyLink" target="_blank" rel="noopener" class="btn">Apply Now</a>
+    </div>
+  </div>
+
+  <h2 id="chat-section">Ask HR (Live RAG Assistant)</h2>
+  <div id="msgs">
+    <div class="bot">Hello! Ask me anything about AHMD HR policies (e.g., annual leave, remote work, working hours).</div>
+  </div>
+  <form id="ask">
+    <input id="q" placeholder="Type your HR policy question in English or Arabic..." required>
+    <button type="submit" class="btn">Ask</button>
+  </form>
+
+  <h2>How It Works (6 Automated Workflows)</h2>
+  <ol class="steps">
+    <li><strong>Recruitment 1 — Intake:</strong> Validates PDF CVs, checks for duplicate applications, uploads CVs to Google Drive, and logs candidates into Google Sheets.</li>
+    <li><strong>Recruitment 2 — AI Screening:</strong> Runs hourly to evaluate new applications against job criteria using LLMs, updates scores, and emails interview invites or declines.</li>
+    <li><strong>Recruitment 3 — Error Handler:</strong> Monitors all workflows, logs runtime errors to Google Sheets, and sends instant email alerts.</li>
+    <li><strong>Policy Loader:</strong> Syncs HR policy documents from Google Drive into the vector store automatically on startup and every morning at 7:00 AM.</li>
+    <li><strong>RAG HR Assistant:</strong> Answers employee questions strictly grounded in the loaded HR policy documents.</li>
+    <li><strong>Job Application Coach:</strong> Analyzes a candidate's CV against a specific job description and emails actionable feedback.</li>
+  </ol>
+
+  <h2>Download Workflow Templates</h2>
+  <p style="color: var(--muted); font-size: 0.9rem;">Sanitized n8n JSON files ready to import into your own instance:</p>
+  <ul class="downloads">
+    <li><a href="01_Recruitment_Intake_Part1.json" download>01_Recruitment_Intake_Part1.json</a></li>
+    <li><a href="02_Recruitment_Screening_Part2.json" download>02_Recruitment_Screening_Part2.json</a></li>
+    <li><a href="03_Recruitment_Error_Handler.json" download>03_Recruitment_Error_Handler.json</a></li>
+    <li><a href="04_HR_Policy_Loader.json" download>04_HR_Policy_Loader.json</a></li>
+    <li><a href="05_HR_RAG_Chatbot.json" download>05_HR_RAG_Chatbot.json</a></li>
+    <li><a href="06_Job_Application_Coach.json" download>06_Job_Application_Coach.json</a></li>
+  </ul>
+
+  <script>
+    const CONFIG = {
+      n8nBase: "https://gauntlet-stopped-disperser.ngrok-free.dev",
+      chat: "/webhook/768d5f89-81a7-42a6-ab54-dae3e86a4af6/chat",
+      applyForm: "/form/c3bc5359-349c-4bfc-93fc-71bfaf16d3b3",
+      coachForm: "/form/32ea3593-9626-4352-b367-b7852c6325be"
+    };
+
+    const $ = s => document.querySelector(s);
+    const sessionId = crypto.randomUUID();
+    const HEADERS = {
+      "Content-Type": "application/json",
+      "ngrok-skip-browser-warning": "1"
+    };
+
+    $("#applyLink").href = CONFIG.n8nBase + CONFIG.applyForm;
+    $("#coachLink").href = CONFIG.n8nBase + CONFIG.coachForm;
+
+    function setStatus(online) {
+      $("#status").textContent = online ? "● Online" : "● Offline (Start n8n & ngrok)";
+      $("#status").className = "badge " + (online ? "on" : "off");
+      document.querySelectorAll("#applyLink, #coachLink").forEach(a => a.classList.toggle("disabled", !online));
+    }
+
+    async function checkStatus() {
+      try {
+        await fetch(CONFIG.n8nBase + CONFIG.chat, {
+          method: "POST",
+          headers: HEADERS,
+          body: JSON.stringify({ action: "loadPreviousSession", sessionId })
+        });
+        setStatus(true);
+      } catch (err) {
+        setStatus(false);
+      }
+    }
+    checkStatus();
+
+    function add(cls, text) {
+      const d = document.createElement("div");
+      d.className = cls;
+      d.textContent = text;
+      $("#msgs").append(d);
+      $("#msgs").scrollTop = $("#msgs").scrollHeight;
+      return d;
+    }
+
+    $("#ask").onsubmit = async e => {
+      e.preventDefault();
+      const q = $("#q").value.trim();
+      if (!q) return;
+      $("#q").value = "";
+      add("me", q);
+      const bot = add("bot", "Thinking...");
+      try {
+        const r = await fetch(CONFIG.n8nBase + CONFIG.chat, {
+          method: "POST",
+          headers: HEADERS,
+          body: JSON.stringify({ action: "sendMessage", sessionId, chatInput: q })
+        });
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        const data = await r.json();
+        bot.textContent = data.output || JSON.stringify(data);
+        setStatus(true);
+      } catch (err) {
+        bot.textContent = "The HR assistant is offline right now. Please try again later.";
+        setStatus(false);
+      }
+    };
+  </script>
+</body>
+</html>

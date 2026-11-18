@@ -1,0 +1,284 @@
+{
+  "name": "Policy Loader",
+  "nodes": [
+    {
+      "parameters": {
+        "events": [
+          "init"
+        ]
+      },
+      "type": "n8n-nodes-base.n8nTrigger",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        528
+      ],
+      "id": "7aacaecc-15d3-43d0-a600-0da5f649605c",
+      "name": "n8n Trigger"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -256,
+        688
+      ],
+      "id": "f51b5282-850f-4a72-81ad-1af5afda4192",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        864
+      ],
+      "id": "76a231db-07a1-46de-b4fe-97eb6595e3d4",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "13yRs_JQj5JEKcWrhv5Sr_q_NG1lCXKEJ"
+          },
+          "whatToSearch": "files"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        64,
+        688
+      ],
+      "id": "ffaec7e3-8444-4b03-93d1-5a40b5cb2048",
+      "name": "List Policy Files",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "bvH49NMfNyJWXUSe",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "docsToFormat": "text/plain"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        288,
+        688
+      ],
+      "id": "3c6ddf45-2769-474b-9ed1-cac880c837e5",
+      "name": "Download Policy",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "bvH49NMfNyJWXUSe",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "memoryKey": {
+          "__rl": true,
+          "value": "hr_policies",
+          "mode": "list"
+        },
+        "clearStore": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        512,
+        688
+      ],
+      "id": "908a20c4-e5e5-4e43-9ee7-16997cf76956",
+      "name": "Simple Vector Store"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        496,
+        912
+      ],
+      "id": "32542ae4-f0f8-4ecd-97d7-927f6034dc18",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Jflp0Eu8WgF8kR29",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        624,
+        912
+      ],
+      "id": "ef4ea709-0c01-4c7f-8ae8-03ad21e743bb",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 200,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        624,
+        1056
+      ],
+      "id": "a8bd1075-0a83-4663-9013-224c1b411e85",
+      "name": "Recursive Character Text Splitter"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "n8n Trigger": {
+      "main": [
+        [
+          {
+            "node": "List Policy Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "List Policy Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "List Policy Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Policy Files": {
+      "main": [
+        [
+          {
+            "node": "Download Policy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Policy": {
+      "main": [
+        [
+          {
+            "node": "Simple Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Simple Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Simple Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "fSk3kTcnPn5JUfpo",
+    "timezone": "Africa/Cairo",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "46c16f6d-06d8-4270-9636-be8944aab5e9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7fc122717d715c2a595204f242f022c89ecfbb3257ad7574728da2ea16d2ea51"
+  },
+  "nodeGroups": [],
+  "id": "i0aNK7DHCEpbw7Qy",
+  "tags": []
+}

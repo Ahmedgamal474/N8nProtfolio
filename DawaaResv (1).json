@@ -1,0 +1,1627 @@
+{
+  "name": "DawaaResv",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2960,
+        -624
+      ],
+      "id": "9c10ad18-b22b-4994-8bb8-8850f2216140",
+      "name": "WhatsApp Trigger",
+      "webhookId": "4a83cbfa-df7b-4a8f-b236-8ac75c1c12b7"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Keep customer messages only. Text and photos (prescriptions) are both accepted.\nconst m = $json.messages?.[0];\nif (!m) return [];\n\nreturn [{\n  json: {\n    customer_id: m.from,\n    customer_name: $json.contacts?.[0]?.profile?.name || '',\n    wa_phone_id: $json.metadata.phone_number_id,\n    type: m.type,\n    text: m.text?.body || m.image?.caption || '',\n    media_id: m.image?.id || ''\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2752,
+        -624
+      ],
+      "id": "f08f7dc3-26f0-4d7a-8bd5-4b96a455a645",
+      "name": "Normalize Message"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b8f941ad-a17a-48bc-80d7-faafe19e3f36",
+              "leftValue": "={{ $json.media_id }}",
+              "rightValue": "photo",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2544,
+        -624
+      ],
+      "id": "aacc43a9-cd1a-43de-93a1-2aff76d5671b",
+      "name": "Is Photo ?"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { ...$json, prompt: 'A customer wrote to an Egyptian pharmacy. Return JSON only: {\"is_prescription\": false, \"readable\": true, \"medicines\": [{\"name\": \"\", \"strength\": \"\", \"qty\": 1}], \"other\": \"greeting|question|empty\"}. Only medicines the customer asks for. Message: <<<' + $json.text + '>>>' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2080,
+        -528
+      ],
+      "id": "fcc9521a-e8b1-4385-b8d8-c8745dc2023c",
+      "name": "Prepare Text Read"
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "operation": "mediaUrlGet",
+        "mediaGetId": "={{ $json.media_id }}"
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        -2272,
+        -720
+      ],
+      "id": "f40fbf23-1cb9-4675-9b82-2a883f85ce72",
+      "name": "Download media",
+      "webhookId": "11a95560-87ca-4e65-b4b4-516d15ef0317"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsAppApi",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -2080,
+        -720
+      ],
+      "id": "09177f84-9ff5-4d2c-b135-34ddd8cd383f",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const buf = await this.helpers.getBinaryDataBuffer(0, 'data');\nreturn [{\n  json: {\n    ...$('Normalize Message').first().json,\n    b64: buf.toString('base64'),\n    mime: $input.first().binary.data.mimeType || 'image/jpeg',\n    prompt: 'This is a photo of an Egyptian prescription or medicine box. Return JSON only: {\"is_prescription\": true|false, \"readable\": true|false, \"medicines\": [{\"name\": \"\", \"strength\": \"\", \"qty\": 1}]}. qty = boxes requested, default 1. Never guess an unreadable name: put it as \"?\".'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1888,
+        -720
+      ],
+      "id": "e9248816-be29-4511-acb5-34a2b6a5bf89",
+      "name": "Prepare Prescription Read"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHATID",
+        "text": "={{ 'Could not read a request from ' + $('Normalize Message').first().json.customer_id + ': ' + ($('Normalize Message').first().json.text || '[photo]') + '. Please reply to the customer directly.' }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1360,
+        -528
+      ],
+      "id": "61794d9d-15bf-4f5c-aef5-2cc7c52d7486",
+      "name": "Send a text message",
+      "webhookId": "1db496ca-32ba-4cbd-80ce-e4da4849c0da"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1554034347,
+          "mode": "list",
+          "cachedResultName": "Catalog"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1360,
+        -720
+      ],
+      "id": "96d72973-a39a-4ef3-8bc2-c8f0eea23954",
+      "name": "Read Catalog",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $('AI Read Request').first().json;\nconst raw = src.candidates?.[0]?.content?.parts?.[0]?.text || '{}';\nlet r = {};\ntry {\n  r = JSON.parse(raw);\n} catch (e) {\n  r = { is_prescription: false, readable: false, medicines: [] };\n}\n\nconst cat = $input.all().map(i => i.json);\nconst norm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');\n\nfunction lev(a, b) {\n  const m = a.length, n = b.length;\n  if (!m) return n;\n  if (!n) return m;\n  const dp = Array.from({ length: m + 1 }, (_, i) => [i]);\n  for (let j = 1; j <= n; j++) dp[0][j] = j;\n  for (let i = 1; i <= m; i++) {\n    for (let j = 1; j <= n; j++) {\n      dp[i][j] = a[i - 1] === b[j - 1]\n        ? dp[i - 1][j - 1]\n        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);\n    }\n  }\n  return dp[m][n];\n}\n\nconst lines = [];\nconst unclear = [];\n\nfor (const m of r.medicines || []) {\n  const n = norm(m.name);\n  if (!n || m.name === '?') {\n    unclear.push(m.name || '?');\n    continue;\n  }\n\n  const best = cat.map(p => ({\n    p,\n    d: Math.min(lev(n, norm(p.name)), lev(n, norm(p.active_ingredient)))\n  })).sort((a, b) => a.d - b.d)[0];\n\n  if (!best || best.d > Math.max(2, n.length * 0.3)) {\n    unclear.push(m.name);\n    continue;\n  }\n\n  const p = best.p;\n  const qty = Math.max(1, Math.min(5, Math.round(Number(m.qty) || 1)));\n  const alts = cat.filter(x =>\n    x.sku !== p.sku &&\n    x.active_ingredient === p.active_ingredient &&\n    x.strength === p.strength &&\n    Number(x.stock) >= qty\n  );\n\n  lines.push({\n    sku: p.sku,\n    name: p.name + ' ' + p.strength,\n    qty,\n    price: Number(p.price_egp),\n    in_stock: Number(p.stock) >= qty,\n    controlled: p.controlled === 'yes',\n    fuzzy: best.d > 0,\n    alternative: !(Number(p.stock) >= qty) && alts[0]\n      ? alts[0].name + ' ' + alts[0].strength + ' (' + alts[0].sku + ', ' + alts[0].price_egp + ' EGP)'\n      : ''\n  });\n}\n\nconst needsPharmacist = r.is_prescription || !r.readable || unclear.length > 0 || lines.some(l => l.controlled || !l.in_stock || l.fuzzy);\nconst group = 'R-' + $now.setZone('Africa/Cairo').toFormat('yyMMdd') + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();\n\nreturn [{\n  json: {\n    ...src,\n    b64: undefined,\n    prompt: undefined,\n    group,\n    lines,\n    unclear,\n    readable: r.readable !== false,\n    needsPharmacist,\n    nothing: !lines.length && !unclear.length,\n    total: lines.filter(l => l.in_stock).reduce((s, l) => s + l.qty * l.price, 0)\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1136,
+        -720
+      ],
+      "id": "8f7f8662-383b-4854-b709-5f4c0e687e15",
+      "name": "Match Catalog"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.nothing }}",
+                    "rightValue": "true",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "id": "db6b4386-dfdb-40dd-a836-c26441914616"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Nothing Found"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "96640df9-45f6-44bd-86a4-d5960056f903",
+                    "leftValue": "={{ $json.needsPharmacist }}",
+                    "rightValue": "true",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Phamacist"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Auto Reserve"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -944,
+        -640
+      ],
+      "id": "cd8561be-6bbb-494e-b454-57e8a6043bd7",
+      "name": "Route Request"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1504932916031171",
+        "recipientPhoneNumber": "={{ $('Normalize Message').item.json.customer_id }}",
+        "textBody": "Hello Send the medicine name (e.g. Panadol 500) or a clear photo OR .ابعت اسم الدوا أو صور واضحة للروشتة",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        -688,
+        -864
+      ],
+      "id": "140d7d29-4e5c-4e84-8048-efa6fe40810f",
+      "name": "Nothing Found Reply",
+      "webhookId": "24072db0-0134-4df9-a4ac-20bd5167a32a"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $input.first().json;\nconst customer = $('Normalize Message').first().json;\n\nconst status = j.needsPharmacist ? 'pending_pharmacist' : 'reserved';\nconst exp = $now.setZone('Africa/Cairo').plus({ hours: 2 }).toFormat('yyyy-MM-dd HH:mm');\n\nconst base = {\n  customer_id: j.customer_id || customer.customer_id,\n  wa_phone_id: j.wa_phone_id || customer.wa_phone_id,\n  customer_name: j.customer_name || customer.customer_name\n};\n\nconst rows = (j.lines || []).map(l => ({\n  ...base,\n  sku: l.sku,\n  name: l.name,\n  qty: l.qty,\n  total_egp: l.qty * l.price,\n  status,\n  expires_at: status === 'reserved' ? exp : '',\n  note: [\n    l.controlled ? 'controlled' : '',\n    l.in_stock ? '' : 'out of stock',\n    l.alternative ? 'alt: ' + l.alternative : '',\n    l.fuzzy ? 'fuzzy match' : ''\n  ].filter(Boolean).join('; ')\n}));\n\nfor (const u of (j.unclear || [])) {\n  rows.push({\n    ...base,\n    sku: '',\n    name: String(u),\n    qty: 1,\n    total_egp: 0,\n    status: 'pending_pharmacist',\n    expires_at: '',\n    note: 'not in catalog or unreadable'\n  });\n}\n\nreturn rows.map((r, k) => ({\n  json: {\n    res_id: j.group + '-' + (k + 1),\n    ...r\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -672,
+        -624
+      ],
+      "id": "b42a8a90-5cbf-4cfa-b99c-0c2489eb8e98",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 763195241,
+          "mode": "list",
+          "cachedResultName": "Reservations"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "res_id": "={{ $json.res_id }}",
+            "sku": "={{ $json.sku }}",
+            "name": "={{ $json.name }}",
+            "qty": "={{ $json.qty }}",
+            "total_egp": "={{ $json.total_egp }}",
+            "status": "={{ $json.status }}",
+            "expires_at": "={{$now.plus(2,'hour').format('yyyy-MM-dd hh:mm a')}}",
+            "note": "={{ $json.note }}",
+            "customer_name": "={{ $json.customer_name }}",
+            "wa_phone_id": "={{ $json.wa_phone_id }}",
+            "customer_id": "={{ $json.customer_id }}",
+            "created_at": "={{ $now.format('yyyy-MM-dd hh:mm a') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "res_id",
+              "displayName": "res_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "wa_phone_id",
+              "displayName": "wa_phone_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sku",
+              "displayName": "sku",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "qty",
+              "displayName": "qty",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "total_egp",
+              "displayName": "total_egp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "expires_at",
+              "displayName": "expires_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "pharmacist",
+              "displayName": "pharmacist",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "note",
+              "displayName": "note",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -480,
+        -608
+      ],
+      "id": "087394f3-50bf-466d-a5aa-de05e3d57e2f",
+      "name": "Append row in sheet"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "da3aeadb-c784-4f6e-94c3-185aa5cc6033",
+              "leftValue": "={{ $('Match Catalog').item.json.needsPharmacist }}",
+              "rightValue": "controlled",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -240,
+        -704
+      ],
+      "id": "959463cc-cdf7-4259-b950-a712b97401dc",
+      "name": "Auto Or pharmacist"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1554034347,
+          "mode": "list",
+          "cachedResultName": "Catalog"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sku": "={{ $json.sku }}",
+            "stock": "={{ $json.stock }}"
+          },
+          "matchingColumns": [
+            "sku"
+          ],
+          "schema": [
+            {
+              "id": "sku",
+              "displayName": "sku",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "active_ingredient",
+              "displayName": "active_ingredient",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "strength",
+              "displayName": "strength",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "form",
+              "displayName": "form",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "price_egp",
+              "displayName": "price_egp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "stock",
+              "displayName": "stock",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reorder_level",
+              "displayName": "reorder_level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "controlled",
+              "displayName": "controlled",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        192,
+        -608
+      ],
+      "id": "98a4875b-1b5b-4970-9862-287051814fbd",
+      "name": "Update Stock"
+    },
+    {
+      "parameters": {
+        "jsCode": "const cat = Object.fromEntries($('Read Catalog').all().map(i => [i.json.sku, Number(i.json.stock)]));\nfor (const l of $('Match Catalog').first().json.lines) {\n  cat[l.sku] -= l.qty;\n  if (cat[l.sku] < 0) throw new Error('VALIDATION: stock for ' + l.sku + ' would go negative');\n}\nreturn $('Match Catalog').first().json.lines.map(l => ({ json: { sku: l.sku, stock: cat[l.sku] } }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        -608
+      ],
+      "id": "250a38c8-d85b-4136-bc7b-9b2fdd65e733",
+      "name": "Take Stock Now"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_CHATID",
+        "text": "=كود التعريف:{{ $json.res_id }}- \nالعميل: {{ $json.customer_name }}\nاسم الدواء:{{ $json.name }}\nالكميه :{{ $json.qty }}\nالسعر: {{ $json.total_egp }}\nكود العميل : {{ $json.customer_id }}\nالوقت: {{ $json.created_at }}",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Accept",
+                    "additionalFields": {
+                      "callback_data": "={{ 'ph:approve:' + $('Match Catalog').first().json.group + ':' + $('Match Catalog').first().json.customer_id }}\n"
+                    }
+                  },
+                  {
+                    "text": "Reject",
+                    "additionalFields": {
+                      "callback_data": "={{ 'ph:reject:' + $('Match Catalog').first().json.group + ':' + $('Match Catalog').first().json.customer_id }}\n```[cite: 1]"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -16,
+        -800
+      ],
+      "id": "c1d0b36d-fbb3-4a5c-954c-3f498e473b8a",
+      "name": "Ask Pharmacist",
+      "webhookId": "c1d3abe3-0f08-4581-b2f9-cdb9bf1b0835"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1504932916031171",
+        "recipientPhoneNumber": "={{ $('Code in JavaScript').item.json.customer_id }}",
+        "textBody": "=Your Order(\nCODE:{{ $('Code in JavaScript').item.json.name }}\nQuantity:{{ $('Code in JavaScript').item.json.qty }}\nPrice:{{ $('Code in JavaScript').item.json.total_egp }}\nExpires At: {{ $('Code in JavaScript').item.json.expires_at }}\n) \nis confirmed and on the way  ",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        416,
+        -608
+      ],
+      "id": "deff3d9f-92ed-4600-8baf-87039d1b1ef9",
+      "name": "Confirm reservation",
+      "webhookId": "a2abfcf2-1988-49b0-8ef3-3c191c9a3892"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1504932916031171",
+        "recipientPhoneNumber": "={{ $('Normalize Message').item.json.customer_id }}",
+        "textBody": "=The Pharmasist Is Reviewing Your Order({{ $('Code in JavaScript').item.json.name }}) {{ $('Code in JavaScript').item.json.customer_name }}\n\n            We Will Get back to you Soon...",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        416,
+        -800
+      ],
+      "id": "ad8b98a7-8f08-4e58-9d5c-ad5906d20851",
+      "name": "Send message",
+      "webhookId": "6c7cad45-fab0-4637-9909-8757d6ececdb"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent ",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googlePalmApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  (() => {\n    const parts = [{ text: $json.prompt }];\n    if ($json.b64) {\n      parts.push({ inline_data: { mime_type: $json.mime, data: $json.b64 } });\n    }\n    return JSON.stringify({\n      contents: [{ parts }],\n      generationConfig: { responseMimeType: 'application/json', temperature: 0.1 }\n    });\n  })()\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -1632,
+        -624
+      ],
+      "id": "7d0c78db-57dc-485c-8a48-e155dca4839a",
+      "name": "AI Read Request",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -2880,
+        -80
+      ],
+      "id": "b49b0d5c-f277-4715-9e10-88bf6f1f0452",
+      "name": "Telegram Trigger",
+      "webhookId": "66fadd6f-4d19-4a8d-a355-208d27c9df38"
+    },
+    {
+      "parameters": {
+        "jsCode": "const q = $json.callback_query;\nconst [, action, group, customer] = String(q.data || '').split(':');\nif (!group) return [];\nreturn [{\n  json: {\n    action,\n    group,\n    customer,\n    query_id: q.id,\n    chat_id: q.message.chat.id,\n    message_id: q.message.message_id,\n    original: q.message.text,\n    by: q.from.username || q.from.first_name\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2656,
+        -80
+      ],
+      "id": "8b4e8fd8-e20d-4412-a795-c04b271fc287",
+      "name": "Parse Dicestion"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 763195241,
+          "mode": "list",
+          "cachedResultName": "Reservations"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "status",
+              "lookupValue": "pending_pharmacist"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -2432,
+        -80
+      ],
+      "id": "8019f204-fdbc-4cbd-af9d-d4610609d2c9",
+      "name": "Get row(s) in sheet"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1554034347,
+          "mode": "list",
+          "cachedResultName": "Catalog"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "sku",
+              "lookupValue": "={{ $json.sku }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -2208,
+        -80
+      ],
+      "id": "3a85f8ff-9f6b-4046-883e-6d51f28ebf43",
+      "name": "Get row(s) in sheet1"
+    },
+    {
+      "parameters": {
+        "resource": "callback",
+        "queryId": "={{ $json.query_id }}",
+        "additionalFields": {
+          "show_alert": true,
+          "text": "={{ $json.toast }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1760,
+        -80
+      ],
+      "id": "4844746f-cb58-48f2-8dec-2d4842c0dd49",
+      "name": "Answer Pharmacist",
+      "webhookId": "430659f2-fe61-43cc-9819-3e87298b8d95"
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $('Apply Decision').item.json.chat_id }}",
+        "messageId": "={{ $('Apply Decision').item.json.message_id }}",
+        "text": "={{ $('Apply Decision').first().json.original + '\\n\\n' + ($('Apply Decision').first().json.action === 'approve' ? '✅ Approved' : '❌ Rejected') + ' by ' + $('Apply Decision').first().json.by }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1568,
+        64
+      ],
+      "id": "d972e7f5-7df5-4f44-810f-c654f5e15dcb",
+      "name": "Mark Message Done",
+      "webhookId": "71bf2b17-bb61-477a-b8f8-4d9f066935ea"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Parse Dicestion').first().json;\nconst lines = $('Get row(s) in sheet').all().map(i => i.json).filter(l => String(l.res_id).startsWith(d.group + '-'));\nconst stock = Object.fromEntries($input.all().map(i => [i.json.sku, Number(i.json.stock)]));\n\nif (!lines.length) {\n  return [{ json: { ...d, ok: false, toast: 'Already decided or not found' } }];\n}\n\nif (d.action === 'approve') {\n  for (const l of lines) {\n    stock[l.sku] -= Number(l.qty);\n    if (stock[l.sku] < 0) {\n      return [{ json: { ...d, ok: false, toast: 'Not enough stock for ' + l.name + '. Edit the request or reject.' } }];\n    }\n  }\n}\n\nconst exp = $now.setZone('Africa/Cairo').plus({ hours: 2 }).toFormat('yyyy-MM-dd HH:mm');\n\nreturn [{\n  json: {\n    ...d,\n    ok: true,\n    toast: d.action === 'approve' ? 'Approved' : 'Rejected',\n    lines,\n    newStock: [...new Set(lines.map(l => l.sku).filter(Boolean))].map(s => ({ sku: s, stock: stock[s] })),\n    exp,\n    wa_phone_id: lines[0].wa_phone_id,\n    total: lines.reduce((s, l) => s + Number(l.total_egp), 0)\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1984,
+        -80
+      ],
+      "id": "0743df8d-7749-4530-ba72-34bd1dc5b2c1",
+      "name": "Apply Decision"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Apply Decision').first().json;\n\nreturn d.lines.map(l => ({\n  json: {\n    res_id: l.res_id,\n    status: d.action === 'approve' ? 'reserved' : 'rejected',\n    expires_at: d.action === 'approve' ? d.exp : '',\n    pharmacist: d.by\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1552,
+        -176
+      ],
+      "id": "a6e25d6c-daff-4503-9083-df73afd9cc3b",
+      "name": "Line Updates"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 763195241,
+          "mode": "list",
+          "cachedResultName": "Reservations"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "res_id": "={{ $json.res_id }}",
+            "status": "={{ $json.status }}",
+            "expires_at": "={{ $json.expires_at }}",
+            "pharmacist": "={{ $json.pharmacist }}"
+          },
+          "matchingColumns": [
+            "res_id"
+          ],
+          "schema": [
+            {
+              "id": "res_id",
+              "displayName": "res_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "wa_phone_id",
+              "displayName": "wa_phone_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "sku",
+              "displayName": "sku",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "qty",
+              "displayName": "qty",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "total_egp",
+              "displayName": "total_egp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "expires_at",
+              "displayName": "expires_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "pharmacist",
+              "displayName": "pharmacist",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "note",
+              "displayName": "note",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1328,
+        -176
+      ],
+      "id": "ed850520-54c6-43f1-87f3-48b4ab9d276b",
+      "name": "Update Lines"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4f4ebe38-bab5-4bf7-8acc-e6805b660495",
+              "leftValue": "={{ $('Apply Decision').item.json.toast }}",
+              "rightValue": "Approved",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1040,
+        -144
+      ],
+      "id": "66add4b4-ac8f-45d8-abc7-873d431f9ba9",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('Apply Decision').first().json.newStock.map(s => ({ json: s }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -784,
+        -224
+      ],
+      "id": "99ae9245-15a8-49c6-ae6b-32e67aec5de0",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1554034347,
+          "mode": "list",
+          "cachedResultName": "Catalog"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sku": "={{ $json.sku }}",
+            "stock": "={{ $json.stock }}"
+          },
+          "matchingColumns": [
+            "sku"
+          ],
+          "schema": [
+            {
+              "id": "sku",
+              "displayName": "sku",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "active_ingredient",
+              "displayName": "active_ingredient",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "strength",
+              "displayName": "strength",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "form",
+              "displayName": "form",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "price_egp",
+              "displayName": "price_egp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "stock",
+              "displayName": "stock",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reorder_level",
+              "displayName": "reorder_level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "controlled",
+              "displayName": "controlled",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -576,
+        -224
+      ],
+      "id": "a6304d81-6498-4e66-b455-a566e9ce6193",
+      "name": "Update row in sheet"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1504932916031171",
+        "recipientPhoneNumber": "={{ String($('Apply Decision').first().json.lines[0].customer_id) }}",
+        "textBody": "={{ 'Your pharmacist approved ' + $('Apply Decision').first().json.group + ': ' + $('Apply Decision').first().json.lines.map(l => l.qty + ' x ' + l.name).join(', ') + '. Total ' + $('Apply Decision').first().json.total + ' EGP, reserved for 2 hours. // تم الحجز لمدة ساعتين.' }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        -352,
+        -224
+      ],
+      "id": "e11d1348-3b36-4b28-83b8-0844a0a80088",
+      "name": "Send Confirmation Message",
+      "webhookId": "63af00f7-02f2-4d32-a303-951292acf72f"
+    }
+  ],
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "Normalize Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Message": {
+      "main": [
+        [
+          {
+            "node": "Is Photo ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Photo ?": {
+      "main": [
+        [
+          {
+            "node": "Download media",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Text Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download media": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Prepare Prescription Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Prescription Read": {
+      "main": [
+        [
+          {
+            "node": "AI Read Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Text Read": {
+      "main": [
+        [
+          {
+            "node": "AI Read Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Catalog": {
+      "main": [
+        [
+          {
+            "node": "Match Catalog",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match Catalog": {
+      "main": [
+        [
+          {
+            "node": "Route Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Request": {
+      "main": [
+        [
+          {
+            "node": "Nothing Found Reply",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Auto Or pharmacist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto Or pharmacist": {
+      "main": [
+        [
+          {
+            "node": "Ask Pharmacist",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Take Stock Now",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Take Stock Now": {
+      "main": [
+        [
+          {
+            "node": "Update Stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Stock": {
+      "main": [
+        [
+          {
+            "node": "Confirm reservation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask Pharmacist": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Read Request": {
+      "main": [
+        [
+          {
+            "node": "Read Catalog",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Parse Dicestion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Dicestion": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Apply Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Answer Pharmacist": {
+      "main": [
+        [
+          {
+            "node": "Mark Message Done",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Line Updates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply Decision": {
+      "main": [
+        [
+          {
+            "node": "Answer Pharmacist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Line Updates": {
+      "main": [
+        [
+          {
+            "node": "Update Lines",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Lines": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send Confirmation Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "Africa/Cairo",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "nodeGroups": []
+}

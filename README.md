@@ -1,11 +1,13 @@
-# AHMD People — End-to-End AI HR Automation System
+# n8n AI Automation Portfolio
 
-AHMD People is a live, production-ready HR automation suite built with **n8n**, **Google Workspace**, and **LLMs (Gemini & Groq)**. It automates candidate intake, AI resume screening, career coaching, and employee policy Q&A through a live web interface.
+A collection of production-ready AI automation workflows built with **n8n**, **Google Workspace**, **WhatsApp Cloud API**, **Telegram**, and **LLMs (Gemini & Groq)**.
 
 ## Live Project Website
-- **Live Demo:** - **Live Demo:** https://Ahmedgamal474.github.io/N8nProtfolio/
+- **Live Demo:** https://ahmedgamal474.github.io/N8nProtfolio/
 
-## Workflows Overview
+---
+
+## Project 1: AHMD People — End-to-End AI HR Automation
 
 | Workflow | Trigger | Description |
 | :--- | :--- | :--- |
@@ -16,16 +18,20 @@ AHMD People is a live, production-ready HR automation suite built with **n8n**, 
 | **05 - RAG HR Assistant** | Chat Trigger | Answers employee policy questions strictly grounded in the uploaded HR documents. |
 | **06 - Job Application Coach** | Form Trigger | Analyzes a candidate's CV against a target job description and emails a personalized coaching report. |
 
-## Required Services & Credentials
-- **n8n** (Self-hosted via Docker or Cloud)
-- **Google Cloud OAuth2** (Google Sheets, Google Drive, Gmail)
-- **Google Gemini API** (Embeddings & LLM reasoning)
-- **Groq API** (Fast LLM inference for screening and agents)
+---
+
+## Project 2: Dawaa دواء — Smart Pharmacy WhatsApp & Telegram Assistant
+
+| Workflow | Trigger | Description |
+| :--- | :--- | :--- |
+| **DawaaResv** | WhatsApp & Telegram Triggers | Reads medicine requests or prescription photos via Gemini Vision, fuzzy-matches against the Google Sheets catalog, auto-reserves OTC items for 2 hours, and routes controlled/unclear items to a pharmacist on Telegram with inline Approve/Reject buttons. |
+| **Dawaa2Error** | Schedule & Error Triggers | Runs a 15-minute sweep to expire uncollected reservations and restore stock, sends a nightly low-stock reorder list at 22:00, and classifies/logs runtime errors. |
+
+---
 
 ## How to Import & Run
 1. Download the sanitized JSON files from this repository.
 2. In your n8n instance, create a project folder and import each `.json` file via **Import from File**.
-3. Configure your own **Google OAuth2**, **Gemini**, and **Groq** credentials in n8n.
-4. Replace the placeholder IDs (`YOUR_ID`) in Google Sheets and Google Drive nodes with your own Sheet and Folder IDs.
-5. Link **03 - Error Handler** in the workflow settings of the other workflows.
-6. Activate (Publish) all workflows and run **04 - Policy Loader** once to populate the vector store.
+3. Configure your own **Google OAuth2**, **Gemini**, **Groq**, **WhatsApp Cloud API**, and **Telegram Bot** credentials in n8n.
+4. Replace the placeholder IDs (`YOUR_...`) in Google Sheets, Google Drive, WhatsApp, and Telegram nodes with your own IDs.
+5. Link the respective Error Handler workflow in the workflow settings and activate (Publish) all workflows.

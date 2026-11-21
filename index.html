@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AHMD People — Live AI HR Automation</title>
+  <title>Ahmed Gamal — AI Automation Portfolio</title>
   <style>
     :root {
       --bg: #f8fafc;
@@ -12,6 +12,8 @@
       --muted: #475569;
       --primary: #2563eb;
       --primary-hover: #1d4ed8;
+      --dawaa: #0d9488;
+      --dawaa-hover: #0f766e;
       --border: #e2e8f0;
     }
     * { box-sizing: border-box; }
@@ -21,9 +23,58 @@
       color: var(--text);
       max-width: 920px;
       margin: 0 auto;
-      padding: 32px 16px;
+      padding: 28px 16px;
       line-height: 1.6;
     }
+    /* Project Switcher Tabs */
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .brand {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text);
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #f1f5f9;
+      color: var(--text);
+      font-weight: 600;
+      font-size: 0.92rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .tab-btn:hover { background: #e2e8f0; }
+    .tab-btn.active-hr {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .tab-btn.active-dawaa {
+      background: var(--dawaa);
+      color: #fff;
+      border-color: var(--dawaa);
+    }
+    .project-section { display: none; }
+    .project-section.active { display: block; }
+
     header {
       display: flex;
       justify-content: space-between;
@@ -77,6 +128,8 @@
     .btn:hover { background: var(--primary-hover); }
     .btn.secondary { background: #334155; }
     .btn.secondary:hover { background: #1e293b; }
+    .btn.whatsapp { background: #16a34a; }
+    .btn.whatsapp:hover { background: #15803d; }
     a.disabled { pointer-events: none; opacity: 0.45; }
     #msgs {
       background: var(--card);
@@ -127,73 +180,156 @@
       font-size: 0.9rem;
     }
     ul.downloads li a:hover { border-color: var(--primary); }
+    .note-box {
+      background: #f0fdfa;
+      border: 1px solid #99f6e4;
+      color: #115e59;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 0.92rem;
+      margin-top: 16px;
+    }
   </style>
 </head>
 <body>
 
-  <header>
-    <div>
-      <h1>AHMD People</h1>
-      <p class="subtitle">End-to-end AI HR Automation: Policy RAG Assistant, CV Coaching & Automated Screening.</p>
+  <!-- Top Navigation Switcher -->
+  <nav class="nav-bar">
+    <span class="brand">Ahmed Gamal · n8n Portfolio</span>
+    <div class="tabs">
+      <button id="btn-hr" class="tab-btn active-hr" onclick="switchProject('hr')">1. AHMD People (HR)</button>
+      <button id="btn-dawaa" class="tab-btn" onclick="switchProject('dawaa')">2. Dawaa دواء (Pharmacy)</button>
     </div>
-    <span class="badge" id="status">Checking system...</span>
-  </header>
+  </nav>
 
-  <div class="grid">
-    <div class="card">
-      <h3>1. Ask HR Assistant</h3>
-      <p>Get instant answers sourced directly from AHMD company HR policies using RAG.</p>
-      <a href="#chat-section" class="btn secondary">Ask a Question</a>
+  <!-- ==================== PROJECT 1: AHMD PEOPLE ==================== -->
+  <section id="sec-hr" class="project-section active">
+    <header>
+      <div>
+        <h1>AHMD People</h1>
+        <p class="subtitle">End-to-end AI HR Automation: Policy RAG Assistant, CV Coaching & Automated Screening.</p>
+      </div>
+      <span class="badge" id="status">Checking system...</span>
+    </header>
+
+    <div class="grid">
+      <div class="card">
+        <h3>1. Ask HR Assistant</h3>
+        <p>Get instant answers sourced directly from AHMD company HR policies using RAG.</p>
+        <a href="#chat-section" class="btn secondary">Ask a Question</a>
+      </div>
+      <div class="card">
+        <h3>2. Job Application Coach</h3>
+        <p>Upload your CV and target job post to receive an AI-generated tailored coaching report via email.</p>
+        <a id="coachLink" target="_blank" rel="noopener" class="btn">Get Coached</a>
+      </div>
+      <div class="card">
+        <h3>3. Apply for a Role</h3>
+        <p>Submit your PDF CV to enter our automated AI screening pipeline.</p>
+        <a id="applyLink" target="_blank" rel="noopener" class="btn">Apply Now</a>
+      </div>
     </div>
-    <div class="card">
-      <h3>2. Job Application Coach</h3>
-      <p>Upload your CV and target job post to receive an AI-generated tailored coaching report via email.</p>
-      <a id="coachLink" target="_blank" rel="noopener" class="btn">Get Coached</a>
+
+    <h2 id="chat-section">Ask HR (Live RAG Assistant)</h2>
+    <div id="msgs">
+      <div class="bot">Hello! Ask me anything about AHMD HR policies (e.g., annual leave, remote work, working hours).</div>
     </div>
-    <div class="card">
-      <h3>3. Apply for a Role</h3>
-      <p>Submit your PDF CV to enter our automated AI screening pipeline.</p>
-      <a id="applyLink" target="_blank" rel="noopener" class="btn">Apply Now</a>
+    <form id="ask">
+      <input id="q" placeholder="Type your HR policy question in English or Arabic..." required>
+      <button type="submit" class="btn">Ask</button>
+    </form>
+
+    <h2>How It Works (6 Automated Workflows)</h2>
+    <ol class="steps">
+      <li><strong>Recruitment 1 — Intake:</strong> Validates PDF CVs, checks for duplicate applications, uploads CVs to Google Drive, and logs candidates into Google Sheets.</li>
+      <li><strong>Recruitment 2 — AI Screening:</strong> Runs hourly to evaluate new applications against job criteria using LLMs, updates scores, and emails interview invites or declines.</li>
+      <li><strong>Recruitment 3 — Error Handler:</strong> Monitors all workflows, logs runtime errors to Google Sheets, and sends instant email alerts.</li>
+      <li><strong>Policy Loader:</strong> Syncs HR policy documents from Google Drive into the vector store automatically on startup and every morning at 7:00 AM.</li>
+      <li><strong>RAG HR Assistant:</strong> Answers employee questions strictly grounded in the loaded HR policy documents.</li>
+      <li><strong>Job Application Coach:</strong> Analyzes a candidate's CV against a specific job description and emails actionable feedback.</li>
+    </ol>
+
+    <h2>Download HR Workflow Templates</h2>
+    <p style="color: var(--muted); font-size: 0.9rem;">Sanitized n8n JSON files ready to import into your own instance:</p>
+    <ul class="downloads">
+      <li><a href="01_Recruitment_Intake_Part1.json" download>01_Recruitment_Intake_Part1.json</a></li>
+      <li><a href="02_Recruitment_Screening_Part2.json" download>02_Recruitment_Screening_Part2.json</a></li>
+      <li><a href="03_Recruitment_Error_Handler.json" download>03_Recruitment_Error_Handler.json</a></li>
+      <li><a href="04_HR_Policy_Loader.json" download>04_HR_Policy_Loader.json</a></li>
+      <li><a href="05_HR_RAG_Chatbot.json" download>05_HR_RAG_Chatbot.json</a></li>
+      <li><a href="06_Job_Application_Coach.json" download>06_Job_Application_Coach.json</a></li>
+    </ul>
+  </section>
+
+  <!-- ==================== PROJECT 2: DAWAA PHARMACY ==================== -->
+  <section id="sec-dawaa" class="project-section">
+    <header>
+      <div>
+        <h1>Dawaa دواء — AI Pharmacy Assistant</h1>
+        <p class="subtitle">WhatsApp & Telegram Pharmacy Automation: Prescription Vision Reader, Smart Reservations & Stock Ops.</p>
+      </div>
+      <span class="badge on">● WhatsApp + Telegram</span>
+    </header>
+
+    <div class="grid">
+      <div class="card">
+        <h3>1. Customer WhatsApp Bot</h3>
+        <p>Send a medicine name (even with typos) or a photo of a prescription to reserve stock for 2 hours.</p>
+        <a id="waLink" target="_blank" rel="noopener" class="btn whatsapp">Open WhatsApp Chat</a>
+      </div>
+      <div class="card">
+        <h3>2. Pharmacist Approval (Telegram)</h3>
+        <p>Controlled drugs, unclear prescriptions, or out-of-stock items route to Telegram with inline Approve/Reject buttons.</p>
+        <a href="#dawaa-workflows" class="btn secondary">See Architecture</a>
+      </div>
     </div>
-  </div>
 
-  <h2 id="chat-section">Ask HR (Live RAG Assistant)</h2>
-  <div id="msgs">
-    <div class="bot">Hello! Ask me anything about AHMD HR policies (e.g., annual leave, remote work, working hours).</div>
-  </div>
-  <form id="ask">
-    <input id="q" placeholder="Type your HR policy question in English or Arabic..." required>
-    <button type="submit" class="btn">Ask</button>
-  </form>
+    <div class="note-box">
+      <strong>Note on WhatsApp Testing:</strong> Because this bot runs on the Meta WhatsApp Cloud API Sandbox, external phone numbers must be added to the Meta Developer test list to receive replies. You can inspect the full logic by downloading the sanitized JSON templates below.
+    </div>
 
-  <h2>How It Works (6 Automated Workflows)</h2>
-  <ol class="steps">
-    <li><strong>Recruitment 1 — Intake:</strong> Validates PDF CVs, checks for duplicate applications, uploads CVs to Google Drive, and logs candidates into Google Sheets.</li>
-    <li><strong>Recruitment 2 — AI Screening:</strong> Runs hourly to evaluate new applications against job criteria using LLMs, updates scores, and emails interview invites or declines.</li>
-    <li><strong>Recruitment 3 — Error Handler:</strong> Monitors all workflows, logs runtime errors to Google Sheets, and sends instant email alerts.</li>
-    <li><strong>Policy Loader:</strong> Syncs HR policy documents from Google Drive into the vector store automatically on startup and every morning at 7:00 AM.</li>
-    <li><strong>RAG HR Assistant:</strong> Answers employee questions strictly grounded in the loaded HR policy documents.</li>
-    <li><strong>Job Application Coach:</strong> Analyzes a candidate's CV against a specific job description and emails actionable feedback.</li>
-  </ol>
+    <h2 id="dawaa-workflows">How It Works (2 Integrated Workflows)</h2>
+    <ol class="steps">
+      <li><strong>DawaaResv — Request & Reservation Engine:</strong>
+        <ul>
+          <li>Receives text messages or prescription photos via <strong>WhatsApp Trigger</strong> and parses them using <strong>Gemini Vision / LLM</strong>.</li>
+          <li>Matches requested items against the Google Sheets <strong>Catalog</strong> using Levenshtein fuzzy matching and suggests active-ingredient alternatives if out of stock.</li>
+          <li>Auto-reserves available OTC items for 2 hours and deducts inventory, or routes controlled/unclear items to the pharmacist on <strong>Telegram</strong> for one-click approval.</li>
+        </ul>
+      </li>
+      <li><strong>Dawaa2Error — Back-Office & Error Handler:</strong>
+        <ul>
+          <li><strong>15-Minute Expiry Sweep:</strong> Automatically expires uncollected reservations past their 2-hour hold and restores quantities back to shelf stock.</li>
+          <li><strong>Nightly Reorder Digest (22:00):</strong> Scans low-stock items against reorder thresholds and sends a consolidated restock list via Telegram and Gmail.</li>
+          <li><strong>Error Classifier:</strong> Catches runtime failures, classifies them (network, validation, AI output, config), logs them to Google Sheets, and alerts the team.</li>
+        </ul>
+      </li>
+    </ol>
 
-  <h2>Download Workflow Templates</h2>
-  <p style="color: var(--muted); font-size: 0.9rem;">Sanitized n8n JSON files ready to import into your own instance:</p>
-  <ul class="downloads">
-    <li><a href="01_Recruitment_Intake_Part1.json" download>01_Recruitment_Intake_Part1.json</a></li>
-    <li><a href="02_Recruitment_Screening_Part2.json" download>02_Recruitment_Screening_Part2.json</a></li>
-    <li><a href="03_Recruitment_Error_Handler.json" download>03_Recruitment_Error_Handler.json</a></li>
-    <li><a href="04_HR_Policy_Loader.json" download>04_HR_Policy_Loader.json</a></li>
-    <li><a href="05_HR_RAG_Chatbot.json" download>05_HR_RAG_Chatbot.json</a></li>
-    <li><a href="06_Job_Application_Coach.json" download>06_Job_Application_Coach.json</a></li>
-  </ul>
+    <h2>Download Dawaa Workflow Templates</h2>
+    <p style="color: var(--muted); font-size: 0.9rem;">Sanitized n8n JSON files ready to import into your own instance:</p>
+    <ul class="downloads">
+      <li><a href="DawaaResv.json" download>DawaaResv.json</a></li>
+      <li><a href="Dawaa2Error.json" download>Dawaa2Error.json</a></li>
+    </ul>
+  </section>
 
   <script>
     const CONFIG = {
       n8nBase: "https://gauntlet-stopped-disperser.ngrok-free.dev",
       chat: "/webhook/768d5f89-81a7-42a6-ab54-dae3e86a4af6/chat",
       applyForm: "/form/c3bc5359-349c-4bfc-93fc-71bfaf16d3b3",
-      coachForm: "/form/32ea3593-9626-4352-b367-b7852c6325be"
+      coachForm: "/form/32ea3593-9626-4352-b367-b7852c6325be",
+      whatsappTestNumber: "YOUR_WHATSAPP_TEST_NUMBER"
     };
+
+    function switchProject(proj) {
+      const isHr = proj === "hr";
+      document.getElementById("sec-hr").classList.toggle("active", isHr);
+      document.getElementById("sec-dawaa").classList.toggle("active", !isHr);
+      document.getElementById("btn-hr").className = "tab-btn" + (isHr ? " active-hr" : "");
+      document.getElementById("btn-dawaa").className = "tab-btn" + (!isHr ? " active-dawaa" : "");
+    }
 
     const $ = s => document.querySelector(s);
     const sessionId = crypto.randomUUID();
@@ -204,6 +340,7 @@
 
     $("#applyLink").href = CONFIG.n8nBase + CONFIG.applyForm;
     $("#coachLink").href = CONFIG.n8nBase + CONFIG.coachForm;
+    $("#waLink").href = "https://wa.me/" + CONFIG.whatsappTestNumber + "?text=" + encodeURIComponent("Panadol 500");
 
     function setStatus(online) {
       $("#status").textContent = online ? "● Online" : "● Offline (Start n8n & ngrok)";
